@@ -607,6 +607,8 @@ Success, we have a shell on the DC:
 *Evil-WinRM* PS C:\Users\Raven\Documents> 
 ```
 
+## raven -> administrator
+
 Running whoami /all reveals that we can access Certificate Services over DCOM, which supports our earlier observation of certificate services being used in our nmap scan:
 
 ```
