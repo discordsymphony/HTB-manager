@@ -606,3 +606,18 @@ Success, we have a shell on the DC:
 ```
 *Evil-WinRM* PS C:\Users\Raven\Documents> 
 ```
+
+Running whoami /all reveals that we can access Certificate Services over DCOM, which supports our earlier observation of certificate services being used in our nmap scan:
+
+```
+*Evil-WinRM* PS C:\Users\Raven\Documents> whoami /all
+```
+
+#### Groups:
+
+```
+[...]
+BUILTIN\Pre-Windows 2000 Compatible Access  Alias            S-1-5-32-554 Mandatory group, Enabled by default, Enabled group
+BUILTIN\Certificate Service DCOM Access     Alias            S-1-5-32-574 Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\NETWORK                        Well-known group S-1-5-2      Mandatory group, Enabled by default, Enabled group
+```
