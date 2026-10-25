@@ -458,7 +458,7 @@ MSSQL       10.129.116.131  1433   DC01             [*] Windows 10 / Server 2019
 MSSQL       10.129.116.131  1433   DC01             [+] manager.htb\operator:operator
 ```
 
-We have found password reuse for the MSSQL service with the operator user. This is very dangerous and if an attacker can gain access to an MSSQL database, it could even lead to code execution if the db user has a privileged account. Let's log in before testing if we can get code execution using xp_cmdshell:
+We have found password reuse for the MSSQL service with the operator user. This is very dangerous and if an attacker can gain access to an MSSQL database, it could even lead to code execution if the db user has a privileged account. Let's log in before testing if we can get code execution using xp_cmdshell.
 
 ## Operator -> raven
 
