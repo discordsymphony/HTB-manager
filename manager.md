@@ -277,7 +277,7 @@ However, let's first view the web server on port 80.
 
 #### Home page:
 
-<img src="images/01-webpage.png" width="500">
+<img src="Images/01-webpage.png" width="500">
 
 It seems to be a generic webpage. There is no useful information in the source code, none of the links lead anywhere interesting and there are no version identifiers.
 
