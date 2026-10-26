@@ -676,7 +676,7 @@ Certificate Authorities
       ESC7                              : User has dangerous permissions.
 ```
 
-The Vulnerabilities section has identified:
+We should take note of the following information:
 
 1. ESC7 - An Active Directory Certificate Services attack.
 2. The CA Name - manager-DC01-CA.
