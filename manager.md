@@ -263,7 +263,7 @@ PORT      STATE SERVICE       REASON          VERSION
 49767/tcp open  msrpc         syn-ack ttl 127 Microsoft Windows RPC
 ```
 
-## User -> operator
+## user -> operator
 
 It appears that we are working with a Domain Controller based on the existence of DNS, Kerberos and LDAP. The most likely entry points are going to be either the web server, SMB server, MSSQL server or WinRM. 
 
