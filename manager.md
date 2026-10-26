@@ -682,7 +682,7 @@ We should take note of the following information:
 
 1. ESC7 - An Active Directory Certificate Services attack.
 2. The CA Name - manager-DC01-CA.
-3. That Raven is in the ManageCertificates section.
+3. That Raven is in the ManageCA section.
 
 ESC7 allows us to abuse the Certificate Authority and obtain a certificate that we would not normally be able to obtain. Raven has a special permission called ManageCA that allows them to make themselves a CA Officer. Enabling Raven to approve certificate requests to obtain an Administrator Certificate using a SubCA template, which facilitates requesting a certificate for anyone using a UPN.
 
