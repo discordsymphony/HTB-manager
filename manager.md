@@ -1,5 +1,7 @@
 ## HTB-manager
 
+We will begin this machine by using Nmap to scan the server for all open TCP ports, service versions and perform script scanning:
+
 #### Nmap scan:
 
 ```
