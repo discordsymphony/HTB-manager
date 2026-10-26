@@ -10,7 +10,6 @@ nmap -vv -sCV -p0-65535 10.129.116.131
 
 #### Output:
 
-<details>
 ```
 PORT      STATE SERVICE       REASON          VERSION
 53/tcp    open  domain        syn-ack ttl 127 Simple DNS Plus
@@ -265,7 +264,6 @@ PORT      STATE SERVICE       REASON          VERSION
 49724/tcp open  msrpc         syn-ack ttl 127 Microsoft Windows RPC
 49767/tcp open  msrpc         syn-ack ttl 127 Microsoft Windows RPC
 ```
-</details>
 
 ## user -> operator
 
