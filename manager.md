@@ -403,7 +403,7 @@ This works because each user account in Windows is given an SID (Security Identi
 S-1-5-21-111-222-333-500
 ```
 
-The final number (500) is called the RID (Relative Identifier). Netexec is iterating through a series of these RIDs, returning the associated username with those that exist.
+The final number (500) is called the RID (Relative Identifier). Netexec is iterating through a series of these RIDs, returning the associated username of those that exist.
 
 Moving on, we have access to some new usernames. Lets add these to our username file:
 
