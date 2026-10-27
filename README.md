@@ -23,6 +23,6 @@ As Raven, we enumerated our current groups and found we were a member of Certifi
 | :-------------- | :----------- | :------------------------------------------------------------- |
 | Weak Credentials | High:&nbsp;8.1 | Weak credentials leading to unauthorised MSSQL access. |
 | Exposed password | High:&nbsp;8.1 | Unencrypted plaintext password stored in website backup file. |
-| ESC7&nbsp;AD&nbsp;CS&nbsp;Misconfiguration | Critical:&nbsp;9.8 | Misconfiguration allows elevation of privilege from normal to administrator user. |
+| ESC7&nbsp;AD&nbsp;CS | Critical:&nbsp;9.8 | Misconfiguration allows elevation of privilege from normal to administrator user. |
 
 
